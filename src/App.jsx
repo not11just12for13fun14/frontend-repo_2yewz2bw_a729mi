@@ -305,17 +305,14 @@ function Contact({ selectedPlan }) {
 
       if (!res.ok) throw new Error('Failed to submit. Please try again.')
 
-      // Notify via WhatsApp (opens chat) and Draft email
-      const waText = encodeURIComponent(`New gym lead\nName: ${name}\nPhone: ${phone}\nEmail: ${email || '-'}\nPlan: ${selectedPlan || '-'}\nMessage: ${message || '-'}\nSource: Website`)
-      const waUrl = `https://wa.me/${OWNER.phoneIntl.replace('+','')}?text=${waText}`
-      window.open(waUrl, '_blank')
+      const data = await res.json()
+      // Do not open WhatsApp or email on the client; backend handles notifications
+      const parts = []
+      if (data?.email_sent) parts.push('email sent')
+      if (data?.whatsapp_sent) parts.push('WhatsApp sent')
+      const note = parts.length ? ` (${parts.join(' • ')})` : ''
 
-      const mailtoSubject = encodeURIComponent('New IronPulse Lead')
-      const mailtoBody = waText
-      const mailtoUrl = `mailto:${OWNER.email}?subject=${mailtoSubject}&body=${mailtoBody}`
-      window.open(mailtoUrl, '_blank')
-
-      setStatus('Thanks! Your details have been sent. We will contact you shortly.')
+      setStatus(`Thanks! Your details have been submitted.${note ? ' Notifications triggered' + note : ''}.`)
       setName(''); setPhone(''); setEmail(''); setMessage('')
     } catch (err) {
       setStatus(err.message)
